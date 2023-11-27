@@ -45,7 +45,6 @@ export default function FavouriteScreen() {
 
 	const getMeals = async () => {
 		const favoriteRecipes = JSON.parse(await AsyncStorage.getItem("meals")) || [];
-        console.log(favoriteRecipes);
         if(favoriteRecipes.length){
             setMeals(favoriteRecipes)
         }
@@ -65,7 +64,7 @@ export default function FavouriteScreen() {
 					>
 						<ChevronLeftIcon
 							size={hp(3.5)}
-							strokeWidth={4.5}
+							strokeWidth={3}
 							color="#fbbf24"
 						/>
 					</TouchableOpacity>
