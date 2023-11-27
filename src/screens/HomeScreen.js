@@ -5,6 +5,8 @@ import {
 	Image,
 	TextInput,
 	TouchableOpacity,
+	Alert,
+	Button
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -27,6 +29,9 @@ export default function HomeScreen() {
 	const [activeCategory, setActiveCategory] = useState("Beef");
 	const [categories, setCategories] = useState([]);
 	const [meals, setMeals] = useState([]);
+	const [searchInput, setSearchInput] = useState("");
+	const [text, setText] = useState("Recipes");
+	const [noSearchedMeals, setNoSearchMeals] = useState(false);
 
 	const navigation = useNavigation();
 
@@ -70,11 +75,44 @@ export default function HomeScreen() {
 			// console.log('got recipes: ',response.data);
 			if (response && response.data) {
 				setMeals(response.data.meals);
+				setText("Recipes");
 			}
 		} catch (err) {
 			console.log("error: ", err.message);
 		}
 	};
+
+	// debounce function
+	function debounce(func, delay) {
+		let timeoutId;
+
+		return function (...args) {
+			clearTimeout(timeoutId);
+
+			timeoutId = setTimeout(() => {
+				func.apply(this, args);
+			}, delay);
+		};
+	}
+
+	const handleSearch = async () => {
+		try {
+			const response = await axios.get(
+				`https://www.themealdb.com/api/json/v1/1/search.php?s=${searchInput}`
+			);
+			// console.log('got recipes: ',response.data);
+			if (response && response.data && response.data.meals) {
+				setMeals(response.data.meals);
+				setText("You searched for " + searchInput);
+			} else if (response.data.meals === null) {
+				setNoSearchMeals(true)
+				setTimeout(()=> setNoSearchMeals(false), 3000)
+			}
+		} catch (err) {
+			console.log("error: ", err.message);
+		}
+	};
+
 	return (
 		<View className="flex-1 bg-white">
 			<StatusBar style="dark" />
@@ -131,15 +169,20 @@ export default function HomeScreen() {
 					<TextInput
 						placeholder="Search any recipe"
 						placeholderTextColor={"gray"}
+						value={searchInput}
+						onChangeText={setSearchInput}
+						onSubmitEditing={handleSearch}
 						style={{ fontSize: hp(1.7) }}
 						className="flex-1 text-base mb-1 pl-3 tracking-wider"
 					/>
 					<View className="bg-white rounded-full p-3">
-						<MagnifyingGlassIcon
-							size={hp(2.5)}
-							strokeWidth={3}
-							color="gray"
-						/>
+						<TouchableOpacity onPress={handleSearch}>
+							<MagnifyingGlassIcon
+								size={hp(2.5)}
+								strokeWidth={3}
+								color="gray"
+							/>
+						</TouchableOpacity>
 					</View>
 				</View>
 
@@ -156,7 +199,23 @@ export default function HomeScreen() {
 
 				{/* recipes */}
 				<View>
-					<Recipes meals={meals} categories={categories} />
+					{!noSearchedMeals ? (
+						<Recipes meals={meals} categories={categories} text={text} />
+					) : (
+						<View className="flex items-center space-y-2 mt-20">
+							<Text
+								style={{ fontSize: hp(3) }}
+								className="font-bold text-neutral-500 tracking-widest mb-5"
+							>
+								No meals found for {searchInput}
+							</Text>
+							{/* <Button
+								title="Refresh"
+								color={"#fbbf24"}
+								onPress={() => window.location.reload()}
+							/> */}
+						</View>
+					)}
 				</View>
 			</ScrollView>
 		</View>

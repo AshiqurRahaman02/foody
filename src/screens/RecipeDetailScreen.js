@@ -37,7 +37,7 @@ export default function RecipeDetailScreen(props) {
 
 	useEffect(() => {
 		getMealData(item.idMeal);
-		getFaouriteRecipes();
+		getFavouriteRecipes();
 	}, []);
 
 	const getMealData = async (id) => {
@@ -55,12 +55,12 @@ export default function RecipeDetailScreen(props) {
 		}
 	};
 
-	const getFaouriteRecipes = async () => {
+	const getFavouriteRecipes = async () => {
 		const favoriteRecipes =
 			JSON.parse(await AsyncStorage.getItem("meals")) || [];
-		console.log(favoriteRecipes);
 		if (favoriteRecipes.length) {
 			setFavoriteRecipes(favoriteRecipes);
+			setIsFavourite(false);
 			favoriteRecipes.forEach(({ idMeal }) => {
 				if (idMeal === item.idMeal) {
 					setIsFavourite(true);
@@ -95,23 +95,28 @@ export default function RecipeDetailScreen(props) {
 	};
 
 	const handelAddFavorite = async () => {
-		// setIsFavourite(!isFavourite)
-		// console.log(item)
 
 		if (!isFavourite) {
 			favoriteRecipes.push(item);
 			await AsyncStorage.setItem("meals", JSON.stringify(favoriteRecipes));
-			getFaouriteRecipes();
-		}else{
-			Alert.alert('Remove Recipe', 'Click ok', [
+			getFavouriteRecipes();
+		} else {
+			Alert.alert("Remove Recipe", "from your favorite", [
 				{
-				  text: 'Cancel',
-				  onPress: () => console.log('Cancel Pressed'),
-				  style: 'cancel',
+					text: "Cancel",
+					//   onPress: () => console.log('Cancel Pressed'),
+					style: "cancel",
 				},
-				{text: 'OK', onPress: () => console.log('OK Pressed')},
-			  ]);
+				{ text: "Confirm", onPress: handelRemoveFavorite },
+			]);
 		}
+	};
+	const handelRemoveFavorite = async () => {
+		let filteredRecipes = favoriteRecipes.filter(
+			({ idMeal }) => idMeal !== item.idMeal
+		);
+		await AsyncStorage.setItem("meals", JSON.stringify(filteredRecipes));
+		getFavouriteRecipes();
 	};
 
 	return (
